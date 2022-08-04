@@ -18,7 +18,6 @@ class FC_TABLE() extends Module{
         val buffer_cnt	= Input(UInt(16.W))
         val ack_event   = (Decoupled(new IBH_META()))
 		val fc2tx_rsp	= (Decoupled(new FC_RSP()))
-        val status_reg  = Output(Vec(2,UInt(32.W)))
 	})
 
     val fc_rx_fifo = Module(new Queue(new FC_REQ(), entries=16))
@@ -153,21 +152,7 @@ class FC_TABLE() extends Module{
 		}        	
 	}
     
-    io.status_reg(0)          := XCounter.record_signals_sync(fc_rx_fifo.io.deq.fire())
-    io.status_reg(1)          := XCounter.record_signals_sync(fc_tx_fifo.io.deq.fire())
-
-  	// class ila_fc_table(seq:Seq[Data]) extends BaseILA(seq)
-  	// val mod_fc_table = Module(new ila_fc_table(Seq(	
-	// 	state,
-	//   	io.status_reg(120),
-    // 	io.status_reg(121),
-    // 	fc_table.io.addr_b,
-    //     fc_table.io.data_out_b.credit,
-    //     fc_table.io.data_in_a.credit,
-    //     fc_table.io.wr_en_a,
-    //     fc_rx_fifo.io.deq.bits.op_code,
-    //     fc_tx_fifo.io.deq.bits.op_code
-  	// )))
-  	// mod_fc_table.connect(clock)
+	RoceCounter.record(fc_rx_fifo.io.deq.fire(), "FC_TABLE::fc_rx_fifo_deq_fire")
+	RoceCounter.record(fc_tx_fifo.io.deq.fire(), "FC_TABLE::fc_tx_fifo_deq_fire")
 
 }

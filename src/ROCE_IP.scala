@@ -45,14 +45,13 @@ class ROCE_IP() extends Module{
         val cq_init             = Flipped(Decoupled(new CQ_INIT()))
 
         val local_ip_address    = Input(UInt(32.W))
-        val status_reg          = Output(Vec(16,UInt(32.W)))
+        val reports          	= Output(Vec(ReporterROCE.MAX_NUM/32,UInt(32.W)))
+        val counters          	= Output(Vec(RoceCounter.MAX_NUM,UInt(32.W)))
 	})
 
 
     ToZero(io.m_cmpt_meta.valid)
-	ToZero(io.m_cmpt_meta.bits)
-    // ReporterROCE.report(tx_pkg_route.io.pkg_info.ready, "CONN_TABLE===sIDLE")
-	
+	ToZero(io.m_cmpt_meta.bits)	
 
     ////TX/////////////////////////////
     //reth
@@ -113,10 +112,6 @@ class ROCE_IP() extends Module{
     val conn_table = Module(new CONN_TABLE())
     val fc_table = Module(new FC_TABLE())
     val cq_table = Module(new CQ_TABLE())
-
-
-
-
 
      /////////////////TX/////////////////////////////////////////
 
@@ -199,60 +194,7 @@ class ROCE_IP() extends Module{
     rx_exh_fsm.io.l_read_req_pop_rsp            <>  local_read_vaddr_q.io.pop_rsp
 	rx_exh_fsm.io.m_mem_write_cmd               <>  io.m_mem_write_cmd
     rx_exh_fsm.io.m_recv_meta                   <>  io.m_recv_meta
-
-
-  	// class ila_udp_data(seq:Seq[Data]) extends BaseILA(seq)
-    // val udp_data = Wire(UInt(32.W))
-    // udp_data    := rx_udp_process.io.rx_data_in.bits.data(31,0)
-  	// val mod_udp_data = Module(new ila_udp_data(Seq(	
-	// 	rx_udp_process.io.rx_data_in.valid,
-	//   	rx_udp_process.io.rx_data_in.ready,
-    // 	udp_data
-  	// )))
-  	// mod_udp_data.connect(clock)
-
-  	// class ila_exh_data(seq:Seq[Data]) extends BaseILA(seq)
-    // val exh_data = Wire(UInt(32.W))
-    // exh_data    := rx_exh_process.io.rx_exh_data_in.bits.data(31,0)
-  	// val mod_exh_data = Module(new ila_exh_data(Seq(	
-	// 	rx_exh_process.io.rx_exh_data_in.valid,
-	//   	rx_exh_process.io.rx_exh_data_in.ready,
-    // 	exh_data
-  	// )))
-  	// mod_exh_data.connect(clock)
-
-  	// class ila_reth_data(seq:Seq[Data]) extends BaseILA(seq)
-    // val reth_data = Wire(UInt(32.W))
-    // reth_data    := rx_exh_payload.io.reth_data_out.bits.data(31,0)
-  	// val mod_reth_data = Module(new ila_reth_data(Seq(	
-	// 	rx_exh_payload.io.reth_data_out.valid,
-	//   	rx_exh_payload.io.reth_data_out.ready,
-    // 	reth_data
-  	// )))
-  	// mod_reth_data.connect(clock)
-
-  	// class ila_aeth_data(seq:Seq[Data]) extends BaseILA(seq)
-    // val aeth_data = Wire(UInt(32.W))
-    // aeth_data    := rx_exh_payload.io.aeth_data_out.bits.data(31,0)
-  	// val mod_aeth_data = Module(new ila_aeth_data(Seq(	
-	// 	rx_exh_payload.io.aeth_data_out.valid,
-	//   	rx_exh_payload.io.aeth_data_out.ready,
-    // 	aeth_data
-  	// )))
-  	// mod_aeth_data.connect(clock)
-
-
-  	// class ila_arbiter_data(seq:Seq[Data]) extends BaseILA(seq)
-    // val arbiter_data = Wire(UInt(32.W))
-    // arbiter_data    := rx_mem_payload.io.m_mem_write_data.bits.data(31,0)
-  	// val mod_arbiter_data = Module(new ila_arbiter_data(Seq(	
-	// 	rx_mem_payload.io.m_mem_write_data.valid,
-	//   	rx_mem_payload.io.m_mem_write_data.ready,
-    // 	arbiter_data
-  	// )))
-  	// mod_arbiter_data.connect(clock)      
-
-
+   
     ///////////////////////////EVENT CTRL///////////////////////    
 
     rdma_cmd_handler.io.s_tx_meta  		        <>  io.s_tx_meta
@@ -269,10 +211,6 @@ class ROCE_IP() extends Module{
 	credit_judge.io.exh_event                   <>  event_merge.io.tx_exh_event         
     credit_judge.io.fc2tx_rsp                   <>  fc_table.io.fc2tx_rsp
 
-
-       
-		
-		
     /////////////////////   TABLE   ////////////////////////
 
 	msn_table.io.rx2msn_req                     <>  rx_exh_fsm.io.rx2msn_req
@@ -299,21 +237,20 @@ class ROCE_IP() extends Module{
     cq_table.io.cq_init_req                     <>  io.cq_init
 	cq_table.io.cmpt_meta                       <>  io.m_cmpt_meta
 
-    ToZero(io.status_reg)
-
-
-    val reports = Reg(Vec(ReporterROCE.MAX_NUM,Bool()))
+    val reports = Vec(ReporterROCE.MAX_NUM,Bool())
     ToZero(reports)
     ReporterROCE.get_reports(reports)
 
     ReporterROCE.print_msgs() 
 
-	io.status_reg(0)	:= reports.asUInt()(31,0)
-	io.status_reg(1)	:= reports.asUInt()(63,32)
-    io.status_reg(2)	:= reports.asUInt()(95,64)
-    io.status_reg(3)	:= reports.asUInt()(127,96)
+	io.reports(0)	:= reports.asUInt()(31,0)
+	io.reports(1)	:= reports.asUInt()(63,32)
+    io.reports(2)	:= reports.asUInt()(95,64)
+    io.reports(3)	:= reports.asUInt()(127,96)
 
-    io.status_reg(4)    := fc_table.io.status_reg(0)
-    io.status_reg(5)    := fc_table.io.status_reg(1)
+	val counters = Vec(ReporterROCE.MAX_NUM,UInt(32.W))
+	RoceCounter.get_counters(counters)
+	RoceCounter.print_msgs()
+	io.counters		<> counters
 
 }

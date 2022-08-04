@@ -42,10 +42,6 @@ class MULTI_Q[T<:Data](val gen:T, val queue_num:Int, val entries:Int) extends Mo
     val q_pop_index             = RegInit(0.U(16.W))
     val point_temp              = RegInit(0.U.asTypeOf(new MQ_POINT_ENTRY()))
     val q_table_temp            = RegInit(0.U.asTypeOf(new MULTI_Q_ENTRY(gen)))
-    // ReporterROCE.report(state===sIDLE, "MULTI_Q===sIDLE") 
-    // write_freelist              := false.B
-
-    // free_list.io.in.valid   := 0.U
 
     when(((state === sPOP2) & (q_table_temp.isValid) & (q_table_temp.isValid)))  {//((state === sPOP1) & (io.pop_rsp.ready === 1.U) & (q_table.io.data_out_b.isValid)) ||
         free_list.io.in.valid   := 1.U

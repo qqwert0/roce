@@ -11,11 +11,6 @@ import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
 
-
-// object ReporterROCE extends Reporter{
-// 	override def MAX_NUM = 64
-// }
-
 class IP_LOOP() extends Module{
 	val io = IO(new Bundle{
 
@@ -76,9 +71,4 @@ class IP_LOOP() extends Module{
     } 
     roce(0).io.s_net_rx_data                <>q(1).io.out
     roce(1).io.s_net_rx_data                <>q(0).io.out
-    // val reports = Reg(Vec(32,Bool()))
-    // ReporterROCE.get_reports(reports)
-    // io.reports := reports.asUInt
-
-    // ReporterROCE.print_msgs() 
 }

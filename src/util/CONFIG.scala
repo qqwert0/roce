@@ -9,6 +9,10 @@ object ReporterROCE extends Reporter("ReporterROCE"){
     override def MAX_NUM = 128
 }
 
+object RoceCounter extends XCounter("Roce"){
+	override def MAX_NUM = 64
+}
+
 object CONFIG{
     def DATA_WIDTH = 512
     def MTU = 1408

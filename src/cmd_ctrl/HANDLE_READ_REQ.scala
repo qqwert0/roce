@@ -32,9 +32,6 @@ class HANDLE_READ_REQ() extends Module{
 
     io.remote_read_event.bits 	:= 0.U.asTypeOf(io.remote_read_event.bits)
     io.remote_read_event.valid 	:= 0.U
-
-
-    // ReporterROCE.report(state===sIDLE, "HANDLE_READ_REQ===sIDLE")  
 	
 	switch(state){
 		is(sIDLE){
