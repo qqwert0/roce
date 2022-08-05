@@ -28,11 +28,7 @@ class IP_LOOP() extends Module{
         val m_mem_write_data	= Vec(2,(Decoupled(new AXIS(CONFIG.DATA_WIDTH))))
 
 
-        val msn_init	        = Vec(2,Flipped(Decoupled(new MSN_INIT())))
-        val psn_init	        = Vec(2,Flipped(Decoupled(new PSN_INIT())))
-        val conn_init	        = Vec(2,Flipped(Decoupled(new CONN_REQ())))
-        val fc_init	            = Vec(2,Flipped(Decoupled(new FC_REQ())))  
-        val cq_init             = Vec(2,Flipped(Decoupled(new CQ_INIT()))) 
+        val qp_init	            = Vec(2,Flipped(Decoupled(new QP_INIT())))
         val local_ip_address    = Vec(2,Input(UInt(32.W)))
 
         // val reports             = Output(UInt(32.W))
@@ -54,11 +50,7 @@ class IP_LOOP() extends Module{
 
 
         io.s_tx_meta(i)                 <> roce(i).io.s_tx_meta  	        
-        io.msn_init(i)                  <> roce(i).io.msn_init
-        io.psn_init(i)                  <> roce(i).io.psn_init
-        io.conn_init(i)                 <> roce(i).io.conn_init
-        io.fc_init(i)                   <> roce(i).io.fc_init
-        io.cq_init(i)                   <> roce(i).io.cq_init
+        io.qp_init(i)                   <> roce(i).io.qp_init
         io.local_ip_address(i)          <> roce(i).io.local_ip_address
         io.m_mem_read_cmd(i)            <> roce(i).io.m_mem_read_cmd 
         io.s_mem_read_data(i)           <> roce(i).io.s_mem_read_data 

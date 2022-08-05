@@ -38,11 +38,7 @@ class ROCE_IP() extends Module{
         val m_net_tx_data       = (Decoupled(new AXIS(CONFIG.DATA_WIDTH)))
         val s_net_rx_data       = Flipped(Decoupled(new AXIS(CONFIG.DATA_WIDTH)))
         //QP INIT
-        val msn_init	        = Flipped(Decoupled(new MSN_INIT()))
-        val psn_init            = Flipped(Decoupled(new PSN_INIT()))
-        val conn_init           = Flipped(Decoupled(new CONN_REQ()))
-        val fc_init             = Flipped(Decoupled(new FC_REQ()))
-        val cq_init             = Flipped(Decoupled(new CQ_INIT()))
+        val qp_init	            = Flipped(Decoupled(new QP_INIT()))
 
         val local_ip_address    = Input(UInt(32.W))
         val reports          	= Output(Vec(ReporterROCE.MAX_NUM/32,UInt(32.W)))
@@ -100,9 +96,9 @@ class ROCE_IP() extends Module{
 
     val event_merge = Module(new EVENT_MERGE())
     val remote_read_handler = Module(new HANDLE_READ_REQ())
-    // val mem_read_cmd_merge = Module(new MEM_CMD_MERGER())
     val rdma_cmd_handler = Module(new LOCAL_CMD_HANDLER())
     val credit_judge = Module(new CREDIT_JUDGE())
+    val qp_init = Module(new QP_INIT_ROUTER())
 
     ////////////TABLE///////////////////////
 
@@ -211,33 +207,35 @@ class ROCE_IP() extends Module{
 	credit_judge.io.exh_event                   <>  event_merge.io.tx_exh_event         
     credit_judge.io.fc2tx_rsp                   <>  fc_table.io.fc2tx_rsp
 
+    qp_init.io.qp_init                          <>  io.qp_init
+
     /////////////////////   TABLE   ////////////////////////
 
 	msn_table.io.rx2msn_req                     <>  rx_exh_fsm.io.rx2msn_req
 	msn_table.io.tx2msn_req	                    <>  tx_exh_generate.io.tx2msn_req
-	msn_table.io.msn_init	                    <>  io.msn_init
+	msn_table.io.msn_init	                    <>  qp_init.io.msn_init
 		
 	local_read_vaddr_q.io.push                  <>  rdma_cmd_handler.io.local_read_addr
 	local_read_vaddr_q.io.pop_req               <>  rx_exh_fsm.io.l_read_req_pop_req
 
 	psn_table.io.rx2psn_req                     <>  rx_ibh_fsm.io.rx2psn_req	
 	psn_table.io.tx2psn_req	                    <>  tx_ibh_fsm.io.tx2psn_req
-	psn_table.io.psn_init	                    <>  io.psn_init
+	psn_table.io.psn_init	                    <>  qp_init.io.psn_init
 		   
 	fc_table.io.rx2fc_req                       <>  rx_exh_fsm.io.rx2fc_req	
 	fc_table.io.tx2fc_req	                    <>  credit_judge.io.tx2fc_req
     fc_table.io.buffer_cnt	                    <>  rx_data_buffer.io.count
-    fc_table.io.fc_init                         <>  io.fc_init		  	
+    fc_table.io.fc_init                         <>  qp_init.io.fc_init		  	
 
     conn_table.io.tx2conn_req	                <>  tx_ibh_fsm.io.tx2conn_req
-	conn_table.io.conn_init	                    <>  io.conn_init
+	conn_table.io.conn_init	                    <>  qp_init.io.conn_init
 
     cq_table.io.dir_wq_req                      <>  tx_add_udp.io.dir_wq_req
 	cq_table.io.rq_req                          <>  rx_exh_fsm.io.rq_req
-    cq_table.io.cq_init_req                     <>  io.cq_init
+    cq_table.io.cq_init_req                     <>  qp_init.io.cq_init
 	cq_table.io.cmpt_meta                       <>  io.m_cmpt_meta
 
-    val reports = Vec(ReporterROCE.MAX_NUM,Bool())
+    val reports = Wire(Vec(ReporterROCE.MAX_NUM,Bool()))
     ToZero(reports)
     ReporterROCE.get_reports(reports)
 
@@ -248,7 +246,8 @@ class ROCE_IP() extends Module{
     io.reports(2)	:= reports.asUInt()(95,64)
     io.reports(3)	:= reports.asUInt()(127,96)
 
-	val counters = Vec(ReporterROCE.MAX_NUM,UInt(32.W))
+	val counters = Wire(Vec(RoceCounter.MAX_NUM,UInt(32.W)))
+    ToZero(counters)
 	RoceCounter.get_counters(counters)
 	RoceCounter.print_msgs()
 	io.counters		<> counters

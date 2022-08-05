@@ -654,70 +654,24 @@ module testbench_IP_LOOP(
     wire                io_m_mem_write_data_1_bits_last;
     wire      [511:0]   io_m_mem_write_data_1_bits_data;
     wire      [63:0]    io_m_mem_write_data_1_bits_keep;
-    wire                io_msn_init_0_ready           ;
-    reg                 io_msn_init_0_valid           =0;
-    reg       [23:0]    io_msn_init_0_bits_qpn        =0;
-    reg       [23:0]    io_msn_init_0_bits_msn        =0;
-    reg       [63:0]    io_msn_init_0_bits_vaddr      =0;
-    reg       [31:0]    io_msn_init_0_bits_length     =0;
-    reg       [31:0]    io_msn_init_0_bits_r_key      =0;
-    reg                 io_msn_init_0_bits_write      =0;
-    wire                io_msn_init_1_ready           ;
-    reg                 io_msn_init_1_valid           =0;
-    reg       [23:0]    io_msn_init_1_bits_qpn        =0;
-    reg       [23:0]    io_msn_init_1_bits_msn        =0;
-    reg       [63:0]    io_msn_init_1_bits_vaddr      =0;
-    reg       [31:0]    io_msn_init_1_bits_length     =0;
-    reg       [31:0]    io_msn_init_1_bits_r_key      =0;
-    reg                 io_msn_init_1_bits_write      =0;
-    wire                io_psn_init_0_ready           ;
-    reg                 io_psn_init_0_valid           =0;
-    reg       [23:0]    io_psn_init_0_bits_qpn        =0;
-    reg       [23:0]    io_psn_init_0_bits_local_psn  =0;
-    reg       [23:0]    io_psn_init_0_bits_remote_psn =0;
-    wire                io_psn_init_1_ready           ;
-    reg                 io_psn_init_1_valid           =0;
-    reg       [23:0]    io_psn_init_1_bits_qpn        =0;
-    reg       [23:0]    io_psn_init_1_bits_local_psn  =0;
-    reg       [23:0]    io_psn_init_1_bits_remote_psn =0;
-    wire                io_conn_init_0_ready          ;
-    reg                 io_conn_init_0_valid          =0;
-    reg       [23:0]    io_conn_init_0_bits_qpn       =0;
-    reg       [23:0]    io_conn_init_0_bits_remote_qpn=0;
-    reg       [31:0]    io_conn_init_0_bits_remote_ip =0;
-    reg       [15:0]    io_conn_init_0_bits_remote_udp_port=0;
-    wire                io_conn_init_1_ready          ;
-    reg                 io_conn_init_1_valid          =0;
-    reg       [23:0]    io_conn_init_1_bits_qpn       =0;
-    reg       [23:0]    io_conn_init_1_bits_remote_qpn=0;
-    reg       [31:0]    io_conn_init_1_bits_remote_ip =0;
-    reg       [15:0]    io_conn_init_1_bits_remote_udp_port=0;
-    wire                io_fc_init_0_ready            ;
-    reg                 io_fc_init_0_valid            =0;
-    reg       [23:0]    io_fc_init_0_bits_qpn         =0;
-    reg       [7:0]     io_fc_init_0_bits_op_code     =0;
-    reg       [15:0]    io_fc_init_0_bits_credit      =0;
-    reg       [23:0]    io_fc_init_0_bits_psn         =0;
-    reg                 io_fc_init_0_bits_is_wr_ack   =0;
-    wire                io_fc_init_1_ready            ;
-    reg                 io_fc_init_1_valid            =0;
-    reg       [23:0]    io_fc_init_1_bits_qpn         =0;
-    reg       [7:0]     io_fc_init_1_bits_op_code     =0;
-    reg       [15:0]    io_fc_init_1_bits_credit      =0;
-    reg       [23:0]    io_fc_init_1_bits_psn         =0;
-    reg                 io_fc_init_1_bits_is_wr_ack   =0;
-    wire                io_cq_init_0_ready            ;
-    reg                 io_cq_init_0_valid            =0;
-    reg       [15:0]    io_cq_init_0_bits_qpn         =0;
-    reg       [23:0]    io_cq_init_0_bits_wq_num      =0;
-    reg       [23:0]    io_cq_init_0_bits_rq_num      =0;
-    reg       [23:0]    io_cq_init_0_bits_di_num      =0;
-    wire                io_cq_init_1_ready            ;
-    reg                 io_cq_init_1_valid            =0;
-    reg       [15:0]    io_cq_init_1_bits_qpn         =0;
-    reg       [23:0]    io_cq_init_1_bits_wq_num      =0;
-    reg       [23:0]    io_cq_init_1_bits_rq_num      =0;
-    reg       [23:0]    io_cq_init_1_bits_di_num      =0;
+    wire                io_qp_init_0_ready            ;
+    reg                 io_qp_init_0_valid            =0;
+    reg       [15:0]    io_qp_init_0_bits_qpn         =0;
+    reg       [23:0]    io_qp_init_0_bits_local_psn   =0;
+    reg       [23:0]    io_qp_init_0_bits_remote_psn  =0;
+    reg       [23:0]    io_qp_init_0_bits_remote_qpn  =0;
+    reg       [31:0]    io_qp_init_0_bits_remote_ip   =0;
+    reg       [15:0]    io_qp_init_0_bits_remote_udp_port=0;
+    reg       [23:0]    io_qp_init_0_bits_credit      =0;
+    wire                io_qp_init_1_ready            ;
+    reg                 io_qp_init_1_valid            =0;
+    reg       [15:0]    io_qp_init_1_bits_qpn         =0;
+    reg       [23:0]    io_qp_init_1_bits_local_psn   =0;
+    reg       [23:0]    io_qp_init_1_bits_remote_psn  =0;
+    reg       [23:0]    io_qp_init_1_bits_remote_qpn  =0;
+    reg       [31:0]    io_qp_init_1_bits_remote_ip   =0;
+    reg       [15:0]    io_qp_init_1_bits_remote_udp_port=0;
+    reg       [23:0]    io_qp_init_1_bits_credit      =0;
     reg       [31:0]    io_local_ip_address_0         =0;
     reg       [31:0]    io_local_ip_address_1         =0;
     wire      [31:0]    io_reports                    ;
@@ -915,106 +869,26 @@ DMA #(512) qdma2(
     io_m_mem_write_data_2_bits_last        
 );
 
-
-IN#(177)in_io_msn_init_0(
+IN#(160)in_io_qp_init_0(
         clock,
         reset,
-        {io_msn_init_0_bits_qpn,io_msn_init_0_bits_msn,io_msn_init_0_bits_vaddr,io_msn_init_0_bits_length,io_msn_init_0_bits_r_key,io_msn_init_0_bits_write},
-        io_msn_init_0_valid,
-        io_msn_init_0_ready
+        {io_qp_init_0_bits_qpn,io_qp_init_0_bits_local_psn,io_qp_init_0_bits_remote_psn,io_qp_init_0_bits_remote_qpn,io_qp_init_0_bits_remote_ip,io_qp_init_0_bits_remote_udp_port,io_qp_init_0_bits_credit},
+        io_qp_init_0_valid,
+        io_qp_init_0_ready
 );
-// qpn, msn, vaddr, length, r_key, write
-// 24'h0, 24'h0, 64'h0, 32'h0, 32'h0, 1'h0
+// qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
+// 16'h0, 24'h0, 24'h0, 24'h0, 32'h0, 16'h0, 24'h0
 
-IN#(177)in_io_msn_init_1(
+IN#(160)in_io_qp_init_1(
         clock,
         reset,
-        {io_msn_init_1_bits_qpn,io_msn_init_1_bits_msn,io_msn_init_1_bits_vaddr,io_msn_init_1_bits_length,io_msn_init_1_bits_r_key,io_msn_init_1_bits_write},
-        io_msn_init_1_valid,
-        io_msn_init_1_ready
+        {io_qp_init_1_bits_qpn,io_qp_init_1_bits_local_psn,io_qp_init_1_bits_remote_psn,io_qp_init_1_bits_remote_qpn,io_qp_init_1_bits_remote_ip,io_qp_init_1_bits_remote_udp_port,io_qp_init_1_bits_credit},
+        io_qp_init_1_valid,
+        io_qp_init_1_ready
 );
-// qpn, msn, vaddr, length, r_key, write
-// 24'h0, 24'h0, 64'h0, 32'h0, 32'h0, 1'h0
+// qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
+// 16'h0, 24'h0, 24'h0, 24'h0, 32'h0, 16'h0, 24'h0
 
-IN#(72)in_io_psn_init_0(
-        clock,
-        reset,
-        {io_psn_init_0_bits_qpn,io_psn_init_0_bits_local_psn,io_psn_init_0_bits_remote_psn},
-        io_psn_init_0_valid,
-        io_psn_init_0_ready
-);
-// qpn, local_psn, remote_psn
-// 24'h0, 24'h0, 24'h0
-
-IN#(72)in_io_psn_init_1(
-        clock,
-        reset,
-        {io_psn_init_1_bits_qpn,io_psn_init_1_bits_local_psn,io_psn_init_1_bits_remote_psn},
-        io_psn_init_1_valid,
-        io_psn_init_1_ready
-);
-// qpn, local_psn, remote_psn
-// 24'h0, 24'h0, 24'h0
-
-IN#(96)in_io_conn_init_0(
-        clock,
-        reset,
-        {io_conn_init_0_bits_qpn,io_conn_init_0_bits_remote_qpn,io_conn_init_0_bits_remote_ip,io_conn_init_0_bits_remote_udp_port},
-        io_conn_init_0_valid,
-        io_conn_init_0_ready
-);
-// qpn, remote_qpn, remote_ip, remote_udp_port
-// 24'h0, 24'h0, 32'h0, 16'h0
-
-IN#(96)in_io_conn_init_1(
-        clock,
-        reset,
-        {io_conn_init_1_bits_qpn,io_conn_init_1_bits_remote_qpn,io_conn_init_1_bits_remote_ip,io_conn_init_1_bits_remote_udp_port},
-        io_conn_init_1_valid,
-        io_conn_init_1_ready
-);
-// qpn, remote_qpn, remote_ip, remote_udp_port
-// 24'h0, 24'h0, 32'h0, 16'h0
-
-IN#(73)in_io_fc_init_0(
-        clock,
-        reset,
-        {io_fc_init_0_bits_qpn,io_fc_init_0_bits_op_code,io_fc_init_0_bits_credit,io_fc_init_0_bits_psn,io_fc_init_0_bits_is_wr_ack},
-        io_fc_init_0_valid,
-        io_fc_init_0_ready
-);
-// qpn, op_code, credit, psn, is_wr_ack
-// 24'h0, 8'h0, 16'h0, 24'h0, 1'h0
-
-IN#(73)in_io_fc_init_1(
-        clock,
-        reset,
-        {io_fc_init_1_bits_qpn,io_fc_init_1_bits_op_code,io_fc_init_1_bits_credit,io_fc_init_1_bits_psn,io_fc_init_1_bits_is_wr_ack},
-        io_fc_init_1_valid,
-        io_fc_init_1_ready
-);
-// qpn, op_code, credit, psn, is_wr_ack
-// 24'h0, 8'h0, 16'h0, 24'h0, 1'h0
-
-IN#(88)in_io_cq_init_0(
-        clock,
-        reset,
-        {io_cq_init_0_bits_qpn,io_cq_init_0_bits_wq_num,io_cq_init_0_bits_rq_num,io_cq_init_0_bits_di_num},
-        io_cq_init_0_valid,
-        io_cq_init_0_ready
-);
-// qpn, wq_num, rq_num, di_num
-// 16'h0, 24'h0, 24'h0, 24'h0
-
-IN#(88)in_io_cq_init_1(
-        clock,
-        reset,
-        {io_cq_init_1_bits_qpn,io_cq_init_1_bits_wq_num,io_cq_init_1_bits_rq_num,io_cq_init_1_bits_di_num},
-        io_cq_init_1_valid,
-        io_cq_init_1_ready
-);
-// qpn, wq_num, rq_num, di_num
-// 16'h0, 24'h0, 24'h0, 24'h0
 
 IP_LOOP IP_LOOP_inst(
         .*
@@ -1119,14 +993,11 @@ initial begin
 
 
     #200;
-    in_io_fc_init_0.write({24'd1,8'd0,16'd1600,24'd0,1'b0});     // qpn, op_code, credit, psn// 24'h0, 8'h0, 16'h0, 24'h0
-    in_io_fc_init_1.write({24'd2,8'd0,16'd1600,24'd0,1'b0});
+    in_io_qp_init_0.write({16'd1,24'd1000,24'd4000,24'd2,32'h01bda8c0,16'd17,24'd1600});     // qpn, op_code, credit, psn// 24'h0, 8'h0, 16'h0, 24'h0
+    in_io_qp_init_1.write({16'd2,24'd4000,24'd1000,24'd1,32'h02bda8c0,16'd17,24'd1600});
 
-    in_io_conn_init_0.write({24'd1,24'd2,32'h01bda8c0,16'd17});//l_qpn,r_qpn,r_ip,r_udup_port
-    in_io_conn_init_1.write({24'd2,24'd1,32'h02bda8c0,16'd17});
-
-    in_io_psn_init_0.write({24'd1,24'd1000,24'd4000});// qpn, local_psn, remote_psn
-    in_io_psn_init_1.write({24'd2,24'd4000,24'd1000});// 24'h0, 24'h0, 24'h0
+// qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
+// 16'h0, 24'h0, 24'h0, 24'h0, 32'h0, 16'h0, 24'h0
 
     #2000
     for(i=0;i<rdma_cmd_nums;i=i+1)begin

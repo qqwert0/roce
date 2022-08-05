@@ -198,7 +198,13 @@ class CONN_REQ()extends Bundle{
     val qpn             = UInt(24.W)
     val remote_qpn      = UInt(24.W)
     val remote_ip       = UInt(32.W)
-    val remote_udp_port = UInt(16.W)    
+    val remote_udp_port = UInt(16.W)  
+    def conn_req_generate(qpn_i:UInt, remote_qpn_i:UInt, remote_ip_i:UInt, remote_udp_port_i:UInt)={
+        qpn             := qpn_i
+        remote_qpn      := remote_qpn_i
+        remote_ip       := remote_ip_i    
+        remote_udp_port := remote_udp_port_i
+    }      
 }
 
 
@@ -354,7 +360,7 @@ class CQ_INIT()extends Bundle{
     val qpn         = UInt(16.W)
     val wq_num      = UInt(24.W)  
     val rq_num      = UInt(24.W)
-    val di_num      = UInt(24.W) //direct queue number
+    val di_num      = UInt(24.W) //direct queue number  
 }
 
 class CQ_STATE()extends Bundle{
@@ -372,4 +378,15 @@ class CMPT_META()extends Bundle{
         msg_num     := msg_num_i
         msg_type    := msg_type_i     
     }     
+}
+
+
+class QP_INIT()extends Bundle{
+    val qpn             = UInt(16.W)
+	val local_psn       = UInt(24.W)
+    val remote_psn      = UInt(24.W)
+    val remote_qpn      = UInt(24.W)
+    val remote_ip       = UInt(32.W)
+    val remote_udp_port = UInt(16.W)    
+    val credit          = UInt(24.W)
 }
