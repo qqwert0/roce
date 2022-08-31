@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class TX_EXH_FSM() extends Module{
 	val io = IO(new Bundle{
@@ -22,6 +23,13 @@ class TX_EXH_FSM() extends Module{
 
 
 	})
+
+    Collector.fire(io.event_in)
+    Collector.fire(io.ibh_meta_out)
+    Collector.fire(io.pkg_type2exh)
+    Collector.fire(io.head_data_out)
+
+
 
     val msn_tx_fifo = Module(new Queue(new MSN_STATE(), 16))
     val event_fifo = Module(new Queue(new IBH_META(), 16))
@@ -42,7 +50,7 @@ class TX_EXH_FSM() extends Module{
 
 	val sIDLE :: sGENERATE :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "TX_EXH_FSM===sIDLE")  	
+    Collector.report(state===sIDLE, "TX_EXH_FSM===sIDLE")  	
 	
 	event_fifo.io.deq.ready               := (state === sIDLE) & io.tx2msn_req.ready
     msn_tx_fifo.io.deq.ready             := (state === sGENERATE) & io.ibh_meta_out.ready & io.head_data_out.ready & io.pkg_type2exh.ready

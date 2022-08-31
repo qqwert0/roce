@@ -6,6 +6,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.Collector
 
 
 class CONN_TABLE() extends Module{
@@ -32,7 +33,7 @@ class CONN_TABLE() extends Module{
 
 	val sIDLE :: sTXRSP :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "CONN_TABLE===sIDLE")
+    Collector.report(state===sIDLE, "CONN_TABLE===sIDLE")
     conn_table.io.addr_a                 := 0.U
     conn_table.io.addr_b                 := 0.U
     conn_table.io.wr_en_a                := 0.U

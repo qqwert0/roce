@@ -14,6 +14,7 @@ class FC_TABLE() extends Module{
 		val rx2fc_req  	= Flipped(Decoupled(new FC_REQ()))
 
 		val tx2fc_req	= Flipped(Decoupled(new FC_REQ()))
+        val tx2fc_ack	= Flipped(Decoupled(new FC_REQ()))
 		val fc_init	    = Flipped(Decoupled(new FC_REQ()))
         val buffer_cnt	= Input(UInt(16.W))
         val ack_event   = (Decoupled(new IBH_META()))
@@ -22,10 +23,12 @@ class FC_TABLE() extends Module{
 
     val fc_rx_fifo = Module(new Queue(new FC_REQ(), entries=16))
     val fc_tx_fifo = Module(new Queue(new FC_REQ(), entries=16))
+    val fc_txack_fifo = Module(new Queue(new FC_REQ(), entries=16))
     val fc_init_fifo = Module(new Queue(new FC_REQ(), entries=16))
 
     io.rx2fc_req                       <> fc_rx_fifo.io.enq
     io.tx2fc_req                       <> fc_tx_fifo.io.enq
+    io.tx2fc_ack                       <> fc_txack_fifo.io.enq
     io.fc_init                         <> fc_init_fifo.io.enq
 
 
@@ -43,22 +46,23 @@ class FC_TABLE() extends Module{
 
 	val sIDLE :: sTXRSP1 :: sTXRSP2 :: sTXRSP3 :: sTXRSP4 :: sRXRSP :: sRXRSP1 :: Nil = Enum(7)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "FC_TABLE===sIDLE") 
+    Collector.report(state===sIDLE, "FC_TABLE===sIDLE") 
     fc_table.io.addr_a                 := 0.U
     fc_table.io.addr_b                 := 0.U
     fc_table.io.wr_en_a                := 0.U
     fc_table.io.data_in_a              := 0.U.asTypeOf(fc_table.io.data_in_a)
 
-    fc_rx_fifo.io.deq.ready                 := state === sIDLE
-    fc_tx_fifo.io.deq.ready                 := state === sIDLE & (!fc_rx_fifo.io.deq.valid.asBool) & (~tx_event_lock) 
-    fc_init_fifo.io.deq.ready               := state === sIDLE & (!fc_rx_fifo.io.deq.valid.asBool) & (!fc_tx_fifo.io.deq.valid.asBool) & (~tx_event_lock)
+    
+    fc_init_fifo.io.deq.ready               := state === sIDLE
+    fc_rx_fifo.io.deq.ready                 := state === sIDLE & (!fc_init_fifo.io.deq.valid.asBool)
+    fc_txack_fifo.io.deq.ready              := state === sIDLE & (!fc_init_fifo.io.deq.valid.asBool) & (!fc_rx_fifo.io.deq.valid.asBool)
+    fc_tx_fifo.io.deq.ready                 := state === sIDLE & (!fc_init_fifo.io.deq.valid.asBool) & (!fc_rx_fifo.io.deq.valid.asBool) & (!fc_txack_fifo.io.deq.valid.asBool) & (~tx_event_lock) 
 
     io.ack_event.valid                 := 0.U
     io.ack_event.bits                  := 0.U.asTypeOf(io.ack_event.bits)
 
     io.fc2tx_rsp.valid                 := 0.U
     io.fc2tx_rsp.bits                  := 0.U.asTypeOf(io.fc2tx_rsp.bits)
-    
 	switch(state){
 		is(sIDLE){
             when(fc_init_fifo.io.deq.fire()){
@@ -72,19 +76,21 @@ class FC_TABLE() extends Module{
                     fc_table.io.addr_b              := fc_rx_fifo.io.deq.bits.qpn
                     state                           := sRXRSP                      
                 }
+            }.elsewhen(fc_txack_fifo.io.deq.fire()){
+                tx_fc_request                   <> fc_txack_fifo.io.deq.bits
+                fc_table.io.addr_b              := fc_txack_fifo.io.deq.bits.qpn
+                when(io.buffer_cnt < CONFIG.RX_BUFFER_FULL.U){
+                    state                   := sTXRSP1
+                }.otherwise{
+                    state                   := sTXRSP2
+                }
             }.elsewhen(tx_event_lock){
                 fc_table.io.addr_b              := tmp_request.qpn
                 state                           := sTXRSP3
             }.elsewhen(fc_tx_fifo.io.deq.fire()){
                 tx_fc_request                   <> fc_tx_fifo.io.deq.bits
                 fc_table.io.addr_b              := fc_tx_fifo.io.deq.bits.qpn
-                when(fc_tx_fifo.io.deq.bits.op_code === IB_OP_CODE.RC_ACK){
-                    when(io.buffer_cnt < CONFIG.RX_BUFFER_FULL.U){
-                        state                   := sTXRSP1
-                    }.otherwise{
-                        state                   := sTXRSP2
-                    }
-                }.elsewhen(PKG_JUDGE.HAVE_DATA(fc_tx_fifo.io.deq.bits.op_code)){
+                when(PKG_JUDGE.HAVE_DATA(fc_tx_fifo.io.deq.bits.op_code)){
                     state                       := sTXRSP3
                 }.otherwise{
                     state                       := sTXRSP1
@@ -118,7 +124,6 @@ class FC_TABLE() extends Module{
             tmp_request                     := tx_fc_request
             tx_event_lock                   := true.B
             state                           := sTXRSP4
-
 		}       
 		is(sTXRSP4){
 			when(io.fc2tx_rsp.ready & (tmp_credit.credit >= tmp_request.credit)){
@@ -152,7 +157,5 @@ class FC_TABLE() extends Module{
 		}        	
 	}
     
-	RoceCounter.record(fc_rx_fifo.io.deq.fire(), "FC_TABLE::fc_rx_fifo_deq_fire")
-	RoceCounter.record(fc_tx_fifo.io.deq.fire(), "FC_TABLE::fc_tx_fifo_deq_fire")
 
 }

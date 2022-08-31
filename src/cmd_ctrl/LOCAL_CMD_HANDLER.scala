@@ -6,6 +6,8 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.BaseILA
+import common.Collector
 
 class LOCAL_CMD_HANDLER() extends Module{
 	val io = IO(new Bundle{
@@ -23,7 +25,7 @@ class LOCAL_CMD_HANDLER() extends Module{
 
 	val sIDLE :: sWRITE :: sSEND :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "LOCAL_CMD_HANDLER===sIDLE")	
+    Collector.report(state===sIDLE, "LOCAL_CMD_HANDLER===sIDLE")	
 	
 	io.s_tx_meta.ready          := (state === sIDLE) & io.local_read_addr.ready & io.tx_local_event.ready
 

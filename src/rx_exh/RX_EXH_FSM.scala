@@ -5,6 +5,8 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.BaseILA
+import common.Collector
 
 
 class RX_EXH_FSM() extends Module{
@@ -27,16 +29,14 @@ class RX_EXH_FSM() extends Module{
 
         val pkg_type2exh        = (Decoupled(new RX_PKG_INFO()))
         val pkg_type2mem        = (Decoupled(new RX_PKG_INFO()))
-
-        //retrans
-        // val insert_event_out    = (Decoupled(new INSERT_RETRANS()))
-
-
 	})
 
     val ibh_meta_fifo = Module(new Queue(new IBH_META(), 16))
     val msn_rx_fifo = Module(new Queue(new MSN_STATE(), 16))
     val l_read_pop_fifo = Module(new Queue(new MQ_POP_RSP(UInt(64.W)), 16))
+
+    Collector.fire(io.msn2rx_rsp)
+
     io.ibh_meta_in                      <> ibh_meta_fifo.io.enq
     io.msn2rx_rsp                       <> msn_rx_fifo.io.enq
     io.l_read_req_pop_rsp               <> l_read_pop_fifo.io.enq
@@ -49,16 +49,27 @@ class RX_EXH_FSM() extends Module{
 
     val payload_length = WireInit(0.U(16.W))
     val remain_length = WireInit(0.U(32.W))
-    val credit_tmp = WireInit(0.U(5.W))
+    val credit_tmp = WireInit(0.U(13.W))
     
 
 	val sIDLE :: sMETA :: sDATA :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)	
-    ReporterROCE.report(state===sIDLE, "RX_EXH_FSM===sIDLE")
-	
+    Collector.report(state===sIDLE, "RX_EXH_FSM===sIDLE")
+
+
 	ibh_meta_fifo.io.deq.ready      := (state === sIDLE) & Mux((ibh_meta_fifo.io.deq.bits.op_code === IB_OP_CODE.RC_READ_RESP_FIRST | ibh_meta_fifo.io.deq.bits.op_code === IB_OP_CODE.RC_READ_RESP_ONLY) , (io.rx2msn_req.ready & io.l_read_req_pop_req.ready) , io.rx2msn_req.ready )
     msn_rx_fifo.io.deq.ready        := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , ((~consume_read_addr) | l_read_pop_fifo.io.deq.valid) & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
     l_read_pop_fifo.io.deq.ready    := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , msn_rx_fifo.io.deq.valid & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
+
+
+    Collector.report(consume_read_addr)
+    Collector.report(io.pkg_type2exh.ready)
+    Collector.report(io.pkg_type2mem.ready)
+    Collector.report(io.ack_event.ready)
+    Collector.report(io.m_mem_write_cmd.ready)
+    Collector.report(io.m_recv_meta.ready)
+    Collector.report(io.rx2fc_req.ready)
+    Collector.report(io.r_read_req_req.ready)
 
     io.m_mem_write_cmd.valid        := 0.U
     io.m_mem_write_cmd.bits         := 0.U.asTypeOf(io.m_mem_write_cmd.bits)
@@ -130,6 +141,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RETH  
                     io.pkg_type2mem.bits.data_to_mem:= true.B  
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE                  
                 }
                 is(IB_OP_CODE.RC_WRITE_ONLY){
@@ -151,6 +163,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RETH  
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE                  
                 }                
                 is(IB_OP_CODE.RC_WRITE_MIDDLE ){
@@ -172,6 +185,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RAW 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE    
                 }
                 is( IB_OP_CODE.RC_WRITE_LAST){
@@ -192,6 +206,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RAW 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE    
                 }                
                 is(IB_OP_CODE.RC_READ_REQUEST){
@@ -225,6 +240,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.AETH 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE
                 }
                 is(IB_OP_CODE.RC_READ_RESP_FIRST){
@@ -244,6 +260,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.AETH 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE
                 }
                 is(IB_OP_CODE.RC_READ_RESP_LAST){
@@ -263,6 +280,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.AETH 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE
                 }                                
                 is(IB_OP_CODE.RC_READ_RESP_MIDDLE){
@@ -283,6 +301,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RAW 
                     io.pkg_type2mem.bits.data_to_mem:= true.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE
                 }
                 is(IB_OP_CODE.RC_ACK){
@@ -310,6 +329,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RETH  
                     io.pkg_type2mem.bits.data_to_mem:= false.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE                  
                 }
                 is(IB_OP_CODE.RC_DIRECT_ONLY){
@@ -331,6 +351,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RETH  
                     io.pkg_type2mem.bits.data_to_mem:= false.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE                  
                 }                
                 is(IB_OP_CODE.RC_DIRECT_MIDDLE ){
@@ -354,6 +375,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RAW 
                     io.pkg_type2mem.bits.data_to_mem:= false.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE    
                 }
                 is( IB_OP_CODE.RC_DIRECT_LAST){
@@ -376,6 +398,7 @@ class RX_EXH_FSM() extends Module{
                     io.pkg_type2mem.valid           := 1.U
                     io.pkg_type2mem.bits.pkg_type   := PKG_TYPE.RAW 
                     io.pkg_type2mem.bits.data_to_mem:= false.B
+                    io.pkg_type2mem.bits.length     := payload_length
                     state                           := sIDLE    
                 }                
             }

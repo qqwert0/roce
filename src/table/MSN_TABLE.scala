@@ -7,6 +7,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.Collector
 
 
 class MSN_TABLE() extends Module{
@@ -22,6 +23,7 @@ class MSN_TABLE() extends Module{
     val msn_rx_fifo = Module(new Queue(new MSN_REQ(), entries=16))
     val msn_tx_fifo = Module(new Queue(new MSN_REQ(), entries=16))
     val msn_init_fifo = Module(new Queue(new MSN_INIT(), entries=16))
+    Collector.fire(io.rx2msn_req) 
 
     io.rx2msn_req                       <> msn_rx_fifo.io.enq
     io.tx2msn_req                       <> msn_tx_fifo.io.enq
@@ -35,7 +37,7 @@ class MSN_TABLE() extends Module{
 
 	val sIDLE :: sTXRSP :: sRXRSP :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "MSN_TABLE===sIDLE")  
+    Collector.report(state===sIDLE, "MSN_TABLE===sIDLE")  
     msn_table.io.addr_a                 := 0.U
     msn_table.io.addr_b                 := 0.U
     msn_table.io.wr_en_a                := 0.U
@@ -50,8 +52,6 @@ class MSN_TABLE() extends Module{
 
     io.msn2tx_rsp.valid                 := 0.U
     io.msn2tx_rsp.bits                  := 0.U.asTypeOf(io.msn2tx_rsp.bits)
-
-    // Reporter.report(io.msn2tx_rsp.valid === 1.U,"undefined state")
     
 	switch(state){
 		is(sIDLE){

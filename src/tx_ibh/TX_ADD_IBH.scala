@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class TX_ADD_IBH() extends Module{
 	val io = IO(new Bundle{
@@ -14,6 +15,9 @@ class TX_ADD_IBH() extends Module{
         val tx_data_out	    = (Decoupled(new AXIS(CONFIG.DATA_WIDTH)))
 	})
 
+    Collector.fire(io.ibh_header_in)
+    Collector.fire(io.exh_data_in)
+    Collector.fire(io.tx_data_out)
 
 	val ibh_header_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
 	val exh_data_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
@@ -28,7 +32,7 @@ class TX_ADD_IBH() extends Module{
 
 	val sIDLE :: sPAYLOAD :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)
-	ReporterROCE.report(state===sIDLE, "TX_ADD_IBH===sIDLE")  	
+	Collector.report(state===sIDLE, "TX_ADD_IBH===sIDLE")  	
 
 	
 

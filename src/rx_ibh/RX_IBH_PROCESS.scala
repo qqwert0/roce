@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 
 
@@ -30,7 +31,7 @@ class RX_IBH_PROCESS() extends Module{
 
 	val sIDLE :: sPAYLOAD :: Nil = Enum(2)
 	val state                       = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "RX_IBH_PROCESS===sIDLE")
+	Collector.report(state===sIDLE, "RX_IBH_PROCESS===sIDLE")
 	
 	ibh_data_fifo.io.deq.ready         := ((state === sIDLE) & ibh_meta_fifo.io.deq.valid & io.ibh_meta_out.ready & io.rx_ibh_data_out.ready) | ((state === sPAYLOAD) & io.rx_ibh_data_out.ready) 
 

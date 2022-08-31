@@ -5,6 +5,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class EVENT_MERGE() extends Module{
 	val io = IO(new Bundle{
@@ -19,6 +20,14 @@ class EVENT_MERGE() extends Module{
         val pkg_info	        = (Decoupled(new PKG_INFO()))
 	})
 
+	Collector.fire(io.rx_ack_event)
+	Collector.fire(io.credit_ack_event)
+	Collector.fire(io.remote_read_event)
+	Collector.fire(io.tx_local_event)
+	Collector.fire(io.tx_exh_event)
+	Collector.fire(io.m_mem_read_cmd)
+	Collector.fire(io.pkg_info)
+
     // val rx_nak_fifo = Module(new Queue(new IBH_META(), 16))
     val rx_ack_fifo = Module(new Queue(new IBH_META(), 64))
     val credit_ack_event = Module(new Queue(new IBH_META(), 64))
@@ -26,6 +35,12 @@ class EVENT_MERGE() extends Module{
     val tx_local_fifo = Module(new Queue(new IBH_META(), 16))
 
     val isTx = RegInit(0.B)
+
+    Collector.report(Util.has_overflow(io.rx_ack_event), "rx_ack_overflow")
+    Collector.report(Util.has_overflow(io.tx_local_event), "tx_local_overflow") 
+
+    
+
 
     // io.rx_nak_event                     <> rx_nak_fifo.io.enq
     io.rx_ack_event                     <> rx_ack_fifo.io.enq

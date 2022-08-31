@@ -122,14 +122,5 @@ class ROCETop extends RawModule{
 
 
         roce.io.local_ip_address                    := "h00000a01".U
-
-        for(i<-0 until ReporterROCE.MAX_NUM/32){
-            status_reg(i+100)                       <> roce.io.reports(i)          
-        }
-
-        for(i<-0 until RoceCounter.MAX_NUM){
-            status_reg(i+104)                       <> roce.io.counters(i)            
-        }        
-
     }
 }

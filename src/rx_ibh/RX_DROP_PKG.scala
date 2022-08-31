@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class RX_DROP_PKG() extends Module{
 	val io = IO(new Bundle{
@@ -26,7 +27,7 @@ class RX_DROP_PKG() extends Module{
 
 	val sIDLE :: sDROP :: sFWD :: Nil = Enum(3)
 	val state          = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "RX_DROP_PKG===sIDLE")
+	Collector.report(state===sIDLE, "RX_DROP_PKG===sIDLE")
 	
 	drop_info_fifo.io.deq.ready := (state === sIDLE) & (rx_data_fifo.io.deq.valid) & (rx_meta_fifo.io.deq.valid) & io.rx_meta_out.ready & io.rx_data_out.ready
 	rx_meta_fifo.io.deq.ready	:= (state === sIDLE) & (rx_data_fifo.io.deq.valid) & (drop_info_fifo.io.deq.valid) & io.rx_meta_out.ready & io.rx_data_out.ready

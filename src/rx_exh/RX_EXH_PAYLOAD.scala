@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 
 class RX_EXH_PAYLOAD() extends Module{
@@ -21,6 +22,7 @@ class RX_EXH_PAYLOAD() extends Module{
 
 	val pkg_info_fifo = Module(new Queue(new RX_PKG_INFO(),16))
 	val exh_data_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
+	Collector.fire(io.rx_ibh_data_in)
 	io.pkg_info 			<> pkg_info_fifo.io.enq
 	io.rx_ibh_data_in 		<> exh_data_fifo.io.enq
 
@@ -28,7 +30,7 @@ class RX_EXH_PAYLOAD() extends Module{
 	val pkg_info = RegInit(0.U.asTypeOf(new RX_PKG_INFO()))
 	val sIDLE :: sAETH :: sRETH :: sRAW :: Nil = Enum(4)
 	val state          = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "RX_EXH_PAYLOAD===sIDLE")
+	Collector.report(state===sIDLE, "RX_EXH_PAYLOAD===sIDLE")
 	
 	pkg_info_fifo.io.deq.ready := (state === sIDLE)
 

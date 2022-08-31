@@ -6,6 +6,8 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.BaseILA
+import common.Collector
 
 
 
@@ -37,7 +39,7 @@ class TX_ADD_EXH() extends Module{
 	val pkg_info = RegInit(0.U.asTypeOf(new TX_PKG_INFO()))
 	val sIDLE :: sHEADER :: sAETH :: sRETH :: sRAW :: Nil = Enum(5)
 	val state                   = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "TX_ADD_EXH===sIDLE")  
+	Collector.report(state===sIDLE, "TX_ADD_EXH===sIDLE")  
     val curr_word               = RegInit(0.U.asTypeOf(new AXIS(CONFIG.DATA_WIDTH)))
 	
 	pkg_info_fifo.io.deq.ready           := (state === sIDLE)
@@ -52,8 +54,6 @@ class TX_ADD_EXH() extends Module{
 	io.tx_data_out.bits.data 		:= 0.U
 	io.tx_data_out.bits.keep 		:= 0.U
 	io.tx_data_out.bits.last 		:= 0.U	
-
-
 	
 	switch(state){
 		is(sIDLE){

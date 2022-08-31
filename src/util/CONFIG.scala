@@ -5,17 +5,21 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common._
 
-object ReporterROCE extends Reporter("ReporterROCE"){
-    override def MAX_NUM = 128
-}
-
-object RoceCounter extends XCounter("Roce"){
-	override def MAX_NUM = 64
+object Util{
+    def has_overflow(data:DecoupledIO[Data])={
+        val overflow = RegInit(false.B)
+        when(data.valid && (!data.ready)){
+            overflow    := true.B
+        }.otherwise{
+            overflow    := overflow
+        }
+        overflow
+    }
 }
 
 object CONFIG{
     def DATA_WIDTH = 512
-    def MTU = 1408
+    def MTU = 4096
     def MTU_WORD = MTU/64
     def MAX_QPS = 2048
     def RDMA_DEFAULT_PORT = 4791
@@ -70,10 +74,10 @@ class RETH_HEADER()extends Bundle{
 }
 
 class AETH_HEADER()extends Bundle{
-    val msn = UInt(24.W)
+    val msn = UInt(16.W)
     val iswr_ack = UInt(1.W)
 	val isNAK = UInt(2.W)
-    val credit = UInt(5.W)
+    val credit = UInt(13.W)
 }
 
 
@@ -98,6 +102,9 @@ object  IB_OP_CODE extends ChiselEnum{
     val	reserve = Value(0xFF.U)
 
 }
+
+
+
 
 object  PKG_JUDGE{
 

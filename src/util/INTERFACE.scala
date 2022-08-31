@@ -54,9 +54,9 @@ class IBH_META()extends Bundle{
     val l_vaddr = UInt(64.W)
     val r_key = UInt(32.W)
     val length = UInt(32.W)
-    val msn = UInt(24.W)
+    val msn = UInt(16.W)
     val isNAK = Bool()
-    val credit = UInt(5.W)
+    val credit = UInt(16.W)
     val udp_length = UInt(16.W)
     val num_pkg = UInt(16.W)
     val is_wr_ack = Bool()
@@ -170,6 +170,7 @@ class IBH_META()extends Bundle{
 class RX_PKG_INFO()extends Bundle{
 	val pkg_type = PKG_TYPE()
     val data_to_mem = Bool() // true: data to mem_write_data; false: data to recv_data
+    val length  = UInt(16.W)
 }
 
 class UDPIP_META()extends Bundle{

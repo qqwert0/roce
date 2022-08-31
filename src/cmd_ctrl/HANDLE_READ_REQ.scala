@@ -6,6 +6,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.Collector
 
 class HANDLE_READ_REQ() extends Module{
 	val io = IO(new Bundle{
@@ -26,7 +27,7 @@ class HANDLE_READ_REQ() extends Module{
 
 	val sIDLE :: sGENERATE :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)	
-    ReporterROCE.report(state===sIDLE, "HANDLE_READ_REQ===sIDLE")
+    Collector.report(state===sIDLE, "HANDLE_READ_REQ===sIDLE")
 	
 	r_read_req_fifo.io.deq.ready    := (state === sIDLE) & io.remote_read_event.ready
 

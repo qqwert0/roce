@@ -41,11 +41,23 @@ class ROCE_IP() extends Module{
         val qp_init	            = Flipped(Decoupled(new QP_INIT()))
 
         val local_ip_address    = Input(UInt(32.W))
-        val reports          	= Output(Vec(ReporterROCE.MAX_NUM/32,UInt(32.W)))
-        val counters          	= Output(Vec(RoceCounter.MAX_NUM,UInt(32.W)))
 	})
 
 
+	Collector.fire(io.s_tx_meta)
+	Collector.fire(io.qp_init)
+	Collector.fire(io.s_send_data)
+    Collector.fire(io.s_send_data)
+	Collector.fire(io.m_recv_data)
+    Collector.fire(io.m_recv_data)
+	Collector.fire(io.m_net_tx_data)
+	Collector.fire(io.s_net_rx_data)
+
+    Collector.report(io.m_recv_data.ready)
+    Collector.report(io.m_recv_data.valid)
+    Collector.report(io.m_recv_meta.ready)
+    Collector.report(io.m_recv_meta.valid)
+    
     ToZero(io.m_cmpt_meta.valid)
 	ToZero(io.m_cmpt_meta.bits)	
 
@@ -78,6 +90,8 @@ class ROCE_IP() extends Module{
 
     val rx_data_buffer = XQueue(new AXIS(CONFIG.DATA_WIDTH),4096)
 
+    Collector.report(rx_data_buffer.io.count > 4000.U, "rx_data_buffer_almost_full")
+
     val rx_exh_fsm = Module(new RX_EXH_FSM())
 
     //ibh
@@ -92,6 +106,8 @@ class ROCE_IP() extends Module{
     val rx_udp_process = Module(new RX_UDP_PROCESS()) 
     val ip_rshift = Module(new RSHIFT(20,CONFIG.DATA_WIDTH))
     val rx_ip_process = Module(new RX_IP_PROCESS())
+
+    val rx_ip_buffer = XQueue(new AXIS(CONFIG.DATA_WIDTH),4096)
     //////////EVENT_CTRL////////////////////
 
     val event_merge = Module(new EVENT_MERGE())
@@ -149,8 +165,9 @@ class ROCE_IP() extends Module{
     /////////////////RX/////////////////////////////////////////
     
     //udpip
+    rx_ip_buffer.io.in                          <>  io.s_net_rx_data
     rx_ip_process.io.ip_addr                    <>  io.local_ip_address
-    rx_ip_process.io.rx_data_in                 <>  io.s_net_rx_data         		        	        
+    rx_ip_process.io.rx_data_in                 <>  rx_ip_buffer.io.out        		        	        
     ip_rshift.io.in                             <>  rx_ip_process.io.rx_data_out
 	rx_udp_process.io.rx_data_in                <>  ip_rshift.io.out         
     rx_udp_process.io.ip_meta_in                <>  rx_ip_process.io.ip_meta_out		          
@@ -224,6 +241,7 @@ class ROCE_IP() extends Module{
 		   
 	fc_table.io.rx2fc_req                       <>  rx_exh_fsm.io.rx2fc_req	
 	fc_table.io.tx2fc_req	                    <>  credit_judge.io.tx2fc_req
+    fc_table.io.tx2fc_ack	                    <>  credit_judge.io.tx2fc_ack
     fc_table.io.buffer_cnt	                    <>  rx_data_buffer.io.count
     fc_table.io.fc_init                         <>  qp_init.io.fc_init		  	
 
@@ -234,22 +252,5 @@ class ROCE_IP() extends Module{
 	cq_table.io.rq_req                          <>  rx_exh_fsm.io.rq_req
     cq_table.io.cq_init_req                     <>  qp_init.io.cq_init
 	cq_table.io.cmpt_meta                       <>  io.m_cmpt_meta
-
-    val reports = Wire(Vec(ReporterROCE.MAX_NUM,Bool()))
-    ToZero(reports)
-    ReporterROCE.get_reports(reports)
-
-    ReporterROCE.print_msgs() 
-
-	io.reports(0)	:= reports.asUInt()(31,0)
-	io.reports(1)	:= reports.asUInt()(63,32)
-    io.reports(2)	:= reports.asUInt()(95,64)
-    io.reports(3)	:= reports.asUInt()(127,96)
-
-	val counters = Wire(Vec(RoceCounter.MAX_NUM,UInt(32.W)))
-    ToZero(counters)
-	RoceCounter.get_counters(counters)
-	RoceCounter.print_msgs()
-	io.counters		<> counters
 
 }

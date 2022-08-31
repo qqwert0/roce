@@ -191,13 +191,6 @@ class TB_ROCE() extends Module{
     // val total_length    = RegInit(0.U(32.W))
 
 
-	// RoceCounter.record(io.m_mem_read_cmd.fire(), "TB_ROCE::m_mem_read_cmd_fire")
-	// RoceCounter.record(io.s_mem_read_data.fire(), "TB_ROCE::s_mem_read_data_fire")
-	// RoceCounter.record(io.m_mem_write_cmd.fire(), "TB_ROCE::m_mem_write_cmd_fire")
-	// RoceCounter.record(io.m_mem_write_data.fire(), "TB_ROCE::m_mem_write_data_fire")
-	// RoceCounter.record(io.m_net_tx_data.fire(), "TB_ROCE::m_net_tx_data_fire")
-	// RoceCounter.record(io.s_net_rx_data.fire(), "TB_ROCE::s_net_rx_data_fire")
-    
     // total_length    := (length * ops) / 64.U
     // // when(RegNext(!RegNext(rdma_start) & rdma_start.asBool)){
     // //     rd_time_en             := true.B

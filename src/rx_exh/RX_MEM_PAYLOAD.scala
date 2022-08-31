@@ -7,6 +7,8 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.BaseILA
+import common.Collector
 
 class RX_MEM_PAYLOAD() extends Module{
 	val io = IO(new Bundle{
@@ -23,23 +25,41 @@ class RX_MEM_PAYLOAD() extends Module{
 
 
 	val length_cnt = RegInit(0.U(16.W))
+	val last_err	= RegInit(false.B)
 	val pkg_info = RegInit(0.U.asTypeOf(new RX_PKG_INFO()))
 	val sIDLE :: sAETH :: sRETH :: sRAW :: Nil = Enum(4)
 	val state          = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "RX_MEM_PAYLOAD===sIDLE")
+	Collector.report(state===sIDLE, "RX_MEM_PAYLOAD===sIDLE")
+	Collector.report(last_err, "RX_MEM_PAYLOAD::last_err")
+
+	Collector.fire(io.m_recv_data)
+	Collector.fire(io.m_mem_write_data)
 	
 	io.pkg_info.ready := (state === sIDLE)
 
-	io.reth_data_in.ready               := (state === sRETH) & io.m_mem_write_data.ready
-    io.aeth_data_in.ready               := (state === sAETH) & io.m_mem_write_data.ready
-    io.raw_data_in.ready                := (state === sRAW) & io.m_mem_write_data.ready
+	io.reth_data_in.ready               := (state === sRETH) & io.m_mem_write_data.ready & io.m_recv_data.ready
+    io.aeth_data_in.ready               := (state === sAETH) & io.m_mem_write_data.ready & io.m_recv_data.ready
+    io.raw_data_in.ready                := (state === sRAW) & io.m_mem_write_data.ready & io.m_recv_data.ready
 	
 	ToZero(io.m_mem_write_data.valid)
 	ToZero(io.m_mem_write_data.bits)
 	
 	ToZero(io.m_recv_data.bits)		
 	ToZero(io.m_recv_data.valid)
-	
+
+	// class ila_rx_mem(seq:Seq[Data]) extends BaseILA(seq)
+  	// val mod_rx_mem = Module(new ila_rx_mem(Seq(	
+	// 	pkg_info,
+    //     length_cnt,
+    //     io.m_recv_data.ready,
+    //     io.m_recv_data.valid,
+	// 	io.m_recv_data.bits.last,
+    //     last_err,
+    //     state
+  	// )))
+  	// mod_rx_mem.connect(clock)
+
+
 	switch(state){
 		is(sIDLE){
 			when(io.pkg_info.fire()){
@@ -52,6 +72,8 @@ class RX_MEM_PAYLOAD() extends Module{
                 }.otherwise{
 					state	:= sRAW
 				}
+			}.otherwise{
+				state	:= sIDLE
 			}
 		}
 		is(sAETH){
@@ -59,7 +81,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.aeth_data_in.fire()){
 					io.m_mem_write_data.valid 		:= 1.U 
 					io.m_mem_write_data.bits 		<> io.aeth_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.aeth_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sAETH
@@ -69,7 +95,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.aeth_data_in.fire()){
 					io.m_recv_data.valid 		:= 1.U 
 					io.m_recv_data.bits 		<> io.aeth_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.aeth_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sAETH
@@ -83,7 +113,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.reth_data_in.fire()){
 					io.m_mem_write_data.valid 		:= 1.U 
 					io.m_mem_write_data.bits 		<> io.reth_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.reth_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sRETH
@@ -93,7 +127,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.reth_data_in.fire()){
 					io.m_recv_data.valid 		:= 1.U 
 					io.m_recv_data.bits 		<> io.reth_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.reth_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sRETH
@@ -106,7 +144,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.raw_data_in.fire()){
 					io.m_mem_write_data.valid 		:= 1.U 
 					io.m_mem_write_data.bits 		<> io.raw_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.raw_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sRAW
@@ -116,7 +158,11 @@ class RX_MEM_PAYLOAD() extends Module{
 				when(io.raw_data_in.fire()){
 					io.m_recv_data.valid 		:= 1.U 
 					io.m_recv_data.bits 		<> io.raw_data_in.bits
+					length_cnt						:= length_cnt + 64.U
 					when(io.raw_data_in.bits.last === 1.U){
+						when((length_cnt + 64.U) =/= pkg_info.length){
+							last_err				:= true.B
+						}
 						state						:= sIDLE
 					}.otherwise{
 						state						:= sRAW

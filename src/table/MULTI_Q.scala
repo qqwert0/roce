@@ -6,6 +6,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.Collector
 
 
 
@@ -36,7 +37,7 @@ class MULTI_Q[T<:Data](val gen:T, val queue_num:Int, val entries:Int) extends Mo
 
 	val sIDLE :: sPUSH0 :: sPUSH1 :: sPUSH2 :: sPOP0 :: sPOP1 :: sPOP2 :: Nil = Enum(7)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "MULTI_Q===sIDLE")  
+    Collector.report(state===sIDLE, "MULTI_Q===sIDLE")  
     val new_entry_index	        = RegInit(0.U(16.W))
     val q_push_temp             = RegInit(0.U.asTypeOf(new MQ_POP_REQ(gen)))
     val q_pop_index             = RegInit(0.U(16.W))

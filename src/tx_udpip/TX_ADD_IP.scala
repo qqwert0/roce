@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 
 
@@ -30,7 +31,7 @@ class TX_ADD_IP() extends Module{
 
 	val sIDLE :: sPAYLOAD :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "TX_ADD_IP===sIDLE")
+	Collector.report(state===sIDLE, "TX_ADD_IP===sIDLE")
 	
 
 	ip_meta_fifo.io.deq.ready      := (state === sIDLE) & io.tx_data_out.ready & ip_data_fifo.io.deq.valid

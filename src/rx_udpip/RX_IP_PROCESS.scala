@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class RX_IP_PROCESS() extends Module{
 	val io = IO(new Bundle{
@@ -22,7 +23,7 @@ class RX_IP_PROCESS() extends Module{
 
 	val sIDLE :: sPAYLOAD :: Nil = Enum(2)
 	val state                       = RegInit(sIDLE)	
-	ReporterROCE.report(state===sIDLE, "RX_IP_PROCESS===sIDLE")
+	Collector.report(state===sIDLE, "RX_IP_PROCESS===sIDLE")
 	
 	io.rx_data_in.ready         := ((state === sIDLE) & io.ip_meta_out.ready & io.rx_data_out.ready) | ((state === sPAYLOAD) & io.rx_data_out.ready) 
 

@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
+import common.Collector
 
 class TX_IBH_FSM() extends Module{
 	val io = IO(new Bundle{
@@ -24,6 +25,9 @@ class TX_IBH_FSM() extends Module{
 
 	})
 
+    Collector.fire(io.ibh_meta_in)
+    Collector.fire(io.udpip_meta_out)
+    Collector.fire(io.head_data_out)
     val psn_tx_fifo = Module(new Queue(new PSN_STATE(), 16))
     val conn_tx_fifo = Module(new Queue(new CONN_STATE(), 16))
     io.psn2tx_rsp                       <> psn_tx_fifo.io.enq
@@ -37,7 +41,7 @@ class TX_IBH_FSM() extends Module{
 
 	val sIDLE :: sGENERATE :: Nil = Enum(2)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "TX_IBH_FSM===sIDLE")  	
+    Collector.report(state===sIDLE, "TX_IBH_FSM===sIDLE")  	
 	
 	io.ibh_meta_in.ready                    := (state === sIDLE) & io.tx2psn_req.ready & io.tx2conn_req.ready
     psn_tx_fifo.io.deq.ready                := (state === sGENERATE) & conn_tx_fifo.io.deq.valid & io.udpip_meta_out.ready & io.head_data_out.ready
@@ -79,13 +83,6 @@ class TX_IBH_FSM() extends Module{
                 }.otherwise{
                     ibh_head.psn                    := psn_tx_fifo.io.deq.bits.tx_npsn
                 }
-                // when(ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST){
-                //     io.tx2psn_req.valid             := 1.U
-                //     io.tx2psn_req.bits.gene_psn(ibh_meta.qpn, psn_tx_fifo.io.deq.bits.rx_epsn, psn_tx_fifo.io.deq.bits.tx_npsn + ibh_meta.num_pkg, psn_tx_fifo.io.deq.bits.tx_old_unack, true.B)
-                // }.elsewhen(PKG_JUDGE.WRITE_PKG(ibh_meta.op_code)){
-                //     io.tx2psn_req.valid             := 1.U
-                //     io.tx2psn_req.bits.gene_psn(ibh_meta.qpn, psn_tx_fifo.io.deq.bits.rx_epsn, psn_tx_fifo.io.deq.bits.tx_npsn + 1.U, psn_tx_fifo.io.deq.bits.tx_old_unack, true.B)
-                // }
                 ibh_head.qpn                        := conn_tx_fifo.io.deq.bits.remote_qpn
                 ibh_head.p_key                      := "hffff".U
                 ibh_head.op_code                    := ibh_meta.op_code.asUInt

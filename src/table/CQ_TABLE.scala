@@ -7,6 +7,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.Collector
 
 
 class CQ_TABLE() extends Module{
@@ -32,7 +33,7 @@ class CQ_TABLE() extends Module{
 
 	val sIDLE :: sTXRSP :: sRXRSP :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "CQ_TABLE===sIDLE")  
+    Collector.report(state===sIDLE, "CQ_TABLE===sIDLE")  
     cq_table.io.addr_a                 := 0.U
     cq_table.io.addr_b                 := 0.U
     cq_table.io.wr_en_a                := 0.U

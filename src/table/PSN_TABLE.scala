@@ -6,6 +6,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
 import roce._
+import common.BaseILA
 
 
 class PSN_TABLE() extends Module{
@@ -35,7 +36,6 @@ class PSN_TABLE() extends Module{
 
 	val sIDLE :: sTXRSP :: sRXRSP :: sTXRSP1 :: sRXRSP1 :: Nil = Enum(5)
 	val state                   = RegInit(sIDLE)
-    ReporterROCE.report(state===sIDLE, "PSN_TABLE===sIDLE")  
 
     psn_table.io.addr_a                 := 0.U
     psn_table.io.addr_b                 := 0.U
@@ -55,41 +55,20 @@ class PSN_TABLE() extends Module{
 	switch(state){
 		is(sIDLE){
             when(psn_rx_fifo.io.deq.fire()){
-                // when(psn_rx_fifo.io.deq.bits.write){
-                //     psn_table.io.addr_a             := psn_rx_fifo.io.deq.bits.qpn
-                //     psn_table.io.wr_en_a            := 1.U
-                //     psn_table.io.data_in_a.rx_epsn  := psn_rx_fifo.io.deq.bits.rx_epsn
-                //     psn_table.io.data_in_a.tx_npsn  := psn_rx_fifo.io.deq.bits.tx_npsn
-                //     psn_table.io.data_in_a.tx_old_unack  := psn_rx_fifo.io.deq.bits.tx_old_unack
-                //     state                           := sIDLE
-                // }.otherwise{
-                    psn_table.io.addr_b             := psn_rx_fifo.io.deq.bits.qpn
-                    psn_rx_req                      := psn_rx_fifo.io.deq.bits
-                    state                           := sRXRSP
-                // }
+                psn_table.io.addr_b             := psn_rx_fifo.io.deq.bits.qpn
+                psn_rx_req                      := psn_rx_fifo.io.deq.bits
+                state                           := sRXRSP
             }.elsewhen(psn_tx_fifo.io.deq.fire()){
-                // when(psn_tx_fifo.io.deq.bits.write){
-                //     psn_table.io.addr_a             := psn_tx_fifo.io.deq.bits.qpn
-                //     psn_table.io.wr_en_a            := 1.U
-                //     psn_table.io.data_in_a.rx_epsn  := psn_tx_fifo.io.deq.bits.rx_epsn
-                //     psn_table.io.data_in_a.tx_npsn  := psn_tx_fifo.io.deq.bits.tx_npsn
-                //     psn_table.io.data_in_a.tx_old_unack  := psn_tx_fifo.io.deq.bits.tx_old_unack
-                //     state                           := sIDLE
-                // }.otherwise{
-                    psn_table.io.addr_b             := psn_tx_fifo.io.deq.bits.qpn
-                    psn_tx_req                      := psn_tx_fifo.io.deq.bits
-                    state                           := sTXRSP                    
-                // }
-
+                psn_table.io.addr_b             := psn_tx_fifo.io.deq.bits.qpn
+                psn_tx_req                      := psn_tx_fifo.io.deq.bits
+                state                           := sTXRSP                    
             }.elsewhen(psn_init_fifo.io.deq.fire()){
                 psn_table.io.addr_a             := psn_init_fifo.io.deq.bits.qpn
                 psn_table.io.wr_en_a            := 1.U
                 psn_table.io.data_in_a.rsp_psn  := 0.U
                 psn_table.io.data_in_a.rx_epsn  := psn_init_fifo.io.deq.bits.remote_psn
-                // psn_table.io.data_in_a.rx_bitmap  := 0.U
                 psn_table.io.data_in_a.tx_npsn  := psn_init_fifo.io.deq.bits.local_psn
                 psn_table.io.data_in_a.tx_old_unack  := psn_init_fifo.io.deq.bits.local_psn
-                // psn_table.io.data_in_a.tx_bitmap  := 0.U
                 state                           := sIDLE
             }.otherwise{
                 state                           := sIDLE
@@ -99,7 +78,6 @@ class PSN_TABLE() extends Module{
 			when(io.psn2tx_rsp.ready){
 				io.psn2tx_rsp.valid 		    := 1.U 
 				io.psn2tx_rsp.bits 		        <> psn_table.io.data_out_b
-                
                 psn_table.io.addr_a             := psn_tx_req.qpn
                 psn_table.io.wr_en_a            := 1.U
                 psn_table.io.data_in_a.rx_epsn  := psn_table.io.data_out_b.rx_epsn
