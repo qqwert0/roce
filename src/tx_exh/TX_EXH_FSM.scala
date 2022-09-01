@@ -27,7 +27,6 @@ class TX_EXH_FSM() extends Module{
     Collector.fire(io.event_in)
     Collector.fire(io.ibh_meta_out)
     Collector.fire(io.pkg_type2exh)
-    Collector.fire(io.head_data_out)
 
 
 

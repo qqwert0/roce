@@ -1,7 +1,6 @@
 package roce.table
 
 import common.storage._
-import common.Reporter
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
@@ -23,7 +22,6 @@ class MSN_TABLE() extends Module{
     val msn_rx_fifo = Module(new Queue(new MSN_REQ(), entries=16))
     val msn_tx_fifo = Module(new Queue(new MSN_REQ(), entries=16))
     val msn_init_fifo = Module(new Queue(new MSN_INIT(), entries=16))
-    Collector.fire(io.rx2msn_req) 
 
     io.rx2msn_req                       <> msn_rx_fifo.io.enq
     io.tx2msn_req                       <> msn_tx_fifo.io.enq

@@ -3,7 +3,6 @@ package roce
 import common.storage._
 import common.Delay
 import common.connection._
-import common.Reporter
 import common.axi._
 import chisel3._
 import chisel3.util._

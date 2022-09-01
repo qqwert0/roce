@@ -35,8 +35,6 @@ class RX_EXH_FSM() extends Module{
     val msn_rx_fifo = Module(new Queue(new MSN_STATE(), 16))
     val l_read_pop_fifo = Module(new Queue(new MQ_POP_RSP(UInt(64.W)), 16))
 
-    Collector.fire(io.msn2rx_rsp)
-
     io.ibh_meta_in                      <> ibh_meta_fifo.io.enq
     io.msn2rx_rsp                       <> msn_rx_fifo.io.enq
     io.l_read_req_pop_rsp               <> l_read_pop_fifo.io.enq
@@ -61,15 +59,8 @@ class RX_EXH_FSM() extends Module{
     msn_rx_fifo.io.deq.ready        := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , ((~consume_read_addr) | l_read_pop_fifo.io.deq.valid) & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
     l_read_pop_fifo.io.deq.ready    := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , msn_rx_fifo.io.deq.valid & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
 
-
-    Collector.report(consume_read_addr)
-    Collector.report(io.pkg_type2exh.ready)
-    Collector.report(io.pkg_type2mem.ready)
-    Collector.report(io.ack_event.ready)
     Collector.report(io.m_mem_write_cmd.ready)
     Collector.report(io.m_recv_meta.ready)
-    Collector.report(io.rx2fc_req.ready)
-    Collector.report(io.r_read_req_req.ready)
 
     io.m_mem_write_cmd.valid        := 0.U
     io.m_mem_write_cmd.bits         := 0.U.asTypeOf(io.m_mem_write_cmd.bits)
