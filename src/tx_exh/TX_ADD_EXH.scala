@@ -22,8 +22,8 @@ class TX_ADD_EXH() extends Module{
         val tx_data_out	    = (Decoupled(new AXIS(CONFIG.DATA_WIDTH)))
 	})
 
-	val pkg_info_fifo = Module(new Queue(new TX_PKG_INFO(),16))
-	val header_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
+	val pkg_info_fifo = Module(new Queue(new TX_PKG_INFO(),4))
+	val header_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),4))
 	val reth_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
 	val aeth_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))
 	val raw_fifo = Module(new Queue(new AXIS(CONFIG.DATA_WIDTH),16))

@@ -32,9 +32,6 @@ class RX_MEM_PAYLOAD() extends Module{
 	Collector.report(state===sIDLE, "RX_MEM_PAYLOAD===sIDLE")
 	Collector.report(last_err, "RX_MEM_PAYLOAD::last_err")
 
-	Collector.fire(io.m_recv_data)
-	Collector.fire(io.m_mem_write_data)
-	
 	io.pkg_info.ready := (state === sIDLE)
 
 	io.reth_data_in.ready               := (state === sRETH) & io.m_mem_write_data.ready & io.m_recv_data.ready

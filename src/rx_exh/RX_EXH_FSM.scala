@@ -59,9 +59,6 @@ class RX_EXH_FSM() extends Module{
     msn_rx_fifo.io.deq.ready        := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , ((~consume_read_addr) | l_read_pop_fifo.io.deq.valid) & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
     l_read_pop_fifo.io.deq.ready    := (state === sMETA) & Mux((ibh_meta.op_code === IB_OP_CODE.RC_READ_REQUEST), io.r_read_req_req.ready , msn_rx_fifo.io.deq.valid & io.pkg_type2exh.ready & io.pkg_type2mem.ready & io.ack_event.ready & io.m_mem_write_cmd.ready & io.m_recv_meta.ready & io.rx2fc_req.ready & io.r_read_req_req.ready)
 
-    Collector.report(io.m_mem_write_cmd.ready)
-    Collector.report(io.m_recv_meta.ready)
-
     io.m_mem_write_cmd.valid        := 0.U
     io.m_mem_write_cmd.bits         := 0.U.asTypeOf(io.m_mem_write_cmd.bits)
     io.m_recv_meta.valid            := 0.U

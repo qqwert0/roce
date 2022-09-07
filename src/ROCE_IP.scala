@@ -45,11 +45,11 @@ class ROCE_IP() extends Module{
 
 
 	Collector.fire(io.s_tx_meta)
-	Collector.fire(io.qp_init)
+	Collector.fire(io.m_recv_meta)
 	Collector.fire(io.s_send_data)
-    Collector.fire(io.s_send_data)
+    Collector.fireLast(io.s_send_data)
 	Collector.fire(io.m_recv_data)
-    Collector.fire(io.m_recv_data)
+    Collector.fireLast(io.m_recv_data)
 	Collector.fire(io.m_net_tx_data)
 	Collector.fire(io.s_net_rx_data)
 
@@ -90,7 +90,10 @@ class ROCE_IP() extends Module{
 
     val rx_data_buffer = XQueue(new AXIS(CONFIG.DATA_WIDTH),4096)
 
-    Collector.report(rx_data_buffer.io.count > 4000.U, "rx_data_buffer_almost_full")
+	val recv_data_buffer = XQueue(new AXIS(CONFIG.DATA_WIDTH),1024)
+
+	val rx_data_overflow = rx_data_buffer.io.count > 4000.U
+    Collector.trigger(rx_data_overflow)
 
     val rx_exh_fsm = Module(new RX_EXH_FSM())
 
@@ -199,7 +202,8 @@ class ROCE_IP() extends Module{
 	rx_mem_payload.io.aeth_data_in              <>  aeth_rshift.io.out
 	rx_mem_payload.io.raw_data_in	            <>  rx_exh_payload.io.raw_data_out
     rx_data_buffer.io.in                        <>  rx_mem_payload.io.m_mem_write_data
-    io.m_recv_data                              <>  rx_mem_payload.io.m_recv_data
+    io.m_recv_data                              <>  recv_data_buffer.io.out
+	recv_data_buffer.io.in						<>	rx_mem_payload.io.m_recv_data
     io.m_mem_write_data	                        <>  rx_data_buffer.io.out
 
 	rx_exh_fsm.io.ibh_meta_in                   <>  rx_drop_pkg.io.rx_meta_out

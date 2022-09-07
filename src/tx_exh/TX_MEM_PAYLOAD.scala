@@ -24,9 +24,6 @@ class TX_MEM_PAYLOAD() extends Module{
 	})
 
 
-
-	Collector.fire(io.pkg_info)
-	Collector.report(io.s_send_data.ready)
 	val pkg_info_fifo = Module(new Queue(new PKG_INFO(), 8))
 	io.pkg_info                     <> pkg_info_fifo.io.enq
 

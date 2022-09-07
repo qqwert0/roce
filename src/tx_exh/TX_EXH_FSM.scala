@@ -24,14 +24,8 @@ class TX_EXH_FSM() extends Module{
 
 	})
 
-    Collector.fire(io.event_in)
-    Collector.fire(io.ibh_meta_out)
-    Collector.fire(io.pkg_type2exh)
-
-
-
     val msn_tx_fifo = Module(new Queue(new MSN_STATE(), 16))
-    val event_fifo = Module(new Queue(new IBH_META(), 16))
+    val event_fifo = Module(new Queue(new IBH_META(), 4))
 
     io.msn2tx_rsp                       <> msn_tx_fifo.io.enq
     io.event_in                         <> event_fifo.io.enq

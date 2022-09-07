@@ -5,7 +5,6 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import roce.util._
-import common.Collector
 
 class EVENT_MERGE() extends Module{
 	val io = IO(new Bundle{

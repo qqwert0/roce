@@ -25,9 +25,6 @@ class TX_IBH_FSM() extends Module{
 
 	})
 
-    Collector.fire(io.ibh_meta_in)
-    Collector.fire(io.udpip_meta_out)
-    Collector.fire(io.head_data_out)
     val psn_tx_fifo = Module(new Queue(new PSN_STATE(), 16))
     val conn_tx_fifo = Module(new Queue(new CONN_STATE(), 16))
     io.psn2tx_rsp                       <> psn_tx_fifo.io.enq
